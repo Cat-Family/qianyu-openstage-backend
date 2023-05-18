@@ -43,7 +43,6 @@ func ConnectMongodb() {
 	Userc = Mongoclient.Database("qianyudb").Collection("users")
 	Us = services.NewUserService(Userc, Ctx)
 	Uc = controllers.New(Us)
-
 }
 
 // connect to redis
