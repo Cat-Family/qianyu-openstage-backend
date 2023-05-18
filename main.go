@@ -1,15 +1,26 @@
 package main
 
 import (
-	"qianyu/openstage/routes"
+	"log"
+	"qianyu/openstage/config"
 
 	"github.com/gin-gonic/gin"
 )
 
+var (
+	server	*gin.Engine
+)
+
+
+func init() {
+	config.ConnectMongodb()
+	server = gin.Default()
+}
+
 func main() {
-	r := gin.Default()
-
-	routes.GetRoutes(r)
-
-	r.Run() // listen and serve on 0.0.0.0:8080
+	defer config.Mongoclient.Disconnect(config.Ctx)
+	
+	basepath := server.Group("/v1")
+	config.Uc.RegisterUserRoutes(basepath)
+	log.Fatal(server.Run(":9090"))
 }
