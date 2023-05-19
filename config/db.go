@@ -3,7 +3,6 @@ package config
 import (
 	"context"
 	"log"
-	"os"
 	"qianyu/openstage/controllers"
 	"qianyu/openstage/services"
 
@@ -26,19 +25,21 @@ func ConnectMysql() {}
 
 // connect to mongodb
 func ConnectMongodb() {
-		// load .env file
+	// load .env file
 	err = godotenv.Load()
-	if err != nil { log.Fatal(err) }
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	Ctx = context.TODO()
-  uri := os.Getenv("MONGODB_URI")
-  serverAPIOptions := options.ServerAPI(options.ServerAPIVersion1)
-  clientOptions := options.Client().
-      ApplyURI(uri).
-      SetServerAPIOptions(serverAPIOptions)
+	// uri := os.Getenv("MONGODB_URI")
+	uri := "mongodb://localhost:27017"
+	serverAPIOptions := options.ServerAPI(options.ServerAPIVersion1)
+	clientOptions := options.Client().
+		ApplyURI(uri).
+		SetServerAPIOptions(serverAPIOptions)
 	Mongoclient, err = mongo.Connect(Ctx, clientOptions)
-	log.Println("Connected to established!")	
-
+	log.Println("Connected to established!")
 
 	Userc = Mongoclient.Database("qianyudb").Collection("users")
 	Us = services.NewUserService(Userc, Ctx)

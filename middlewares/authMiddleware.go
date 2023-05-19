@@ -1,7 +1,6 @@
 package middlewares
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -11,6 +10,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/joho/godotenv"
+)
+
+var (
+	prvKey []byte
+	pubKey []byte
+	err    error
 )
 
 // Define a custom claims struct
@@ -23,13 +28,16 @@ type UserClaims struct {
 // @description a middleware to check if the request is authorized
 // @param c *gin.Context
 func AuthMiddleware(c *gin.Context) {
-	prvKey, err := os.ReadFile("cert/qianyu-openstage-jwt_rsa")
-	if err != nil {
-		log.Fatalln(err)
-	}
-	pubKey, err := os.ReadFile("cert/qianyu-openstage-jwt_rsa.pub")
-	if err != nil {
-		log.Fatalln(err)
+	// load jwt key from cert folder
+	if pubKey == nil || prvKey == nil {
+		pubKey, err = os.ReadFile("cert/qianyu-openstage-jwt_rsa.pub")
+		if err != nil {
+			log.Fatal(err)
+		}
+		prvKey, err = os.ReadFile("cert/qianyu-openstage-jwt_rsa")
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	jwtToken := utils.NewJWT(prvKey, pubKey)
@@ -56,12 +64,11 @@ func AuthMiddleware(c *gin.Context) {
 
 	// Parse the token
 	tokenString := parts[1]
-	content, err := jwtToken.Validate(tokenString)
+	claims, err := jwtToken.Validate(tokenString)
 	if err != nil {
-		log.Fatalln(err)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 	}
-	fmt.Println("CONTENT:", content)
 
 	// Set the claims in the Gin context for later use
-	c.Set("claims", content)
+	c.Set("claims", claims)
 }
