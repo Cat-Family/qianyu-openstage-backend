@@ -1,47 +1,43 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
-	"qianyu/openstage/config"
-	"qianyu/openstage/middlewares"
-	"qianyu/openstage/utils"
-	"time"
 
 	"github.com/gin-gonic/gin"
+
+	"qianyu/openstage/config"
+	"qianyu/openstage/utils"
 )
 
 var (
 	server *gin.Engine
 )
 
+const defaultPort = "8080"
+
 func init() {
 	config.ConnectMongodb()
 	server = gin.Default()
-
-	prvKey, err := os.ReadFile("cert/qianyu-openstage-jwt_rsa")
-	if err != nil {
-		log.Fatalln(err)
-	}
-	pubKey, err := os.ReadFile("cert/qianyu-openstage-jwt_rsa.pub")
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	jwtToken := utils.NewJWT(prvKey, pubKey)
-	tok, err := jwtToken.Create(time.Hour, "Can be anything")
-	if err != nil {
-		log.Fatalln(err)
-	}
-	fmt.Println("TOKEN:", tok)
 }
 
 func main() {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = defaultPort
+	}
+
 	defer config.Mongoclient.Disconnect(config.Ctx)
 
-	server.Use(middlewares.AuthMiddleware)
+	// middlewares
+	// server.Use(middlewares.AuthMiddleware)
+
+	// graphql
+	server.POST("/query", utils.GraphqlHandler())
+	server.GET("/", utils.PlaygroundHandler())
+
 	basepath := server.Group("/v1")
 	config.Uc.RegisterUserRoutes(basepath)
-	log.Fatal(server.Run(":9090"))
+
+	log.Fatal(server.Run(port))
 }
