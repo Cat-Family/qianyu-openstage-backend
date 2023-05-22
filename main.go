@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"qianyu/openstage/config"
+	"qianyu/openstage/middlewares"
 	"qianyu/openstage/utils"
 )
 
@@ -29,14 +30,12 @@ func main() {
 
 	defer config.Mongoclient.Disconnect(config.Ctx)
 
-	// middlewares
-	// server.Use(middlewares.AuthMiddleware)
-
 	// graphql
-	server.POST("/query", utils.GraphqlHandler())
 	server.GET("/", utils.PlaygroundHandler())
+	server.POST("/query", middlewares.AuthMiddleware, utils.GraphqlHandler())
 
 	basepath := server.Group("/v1")
+	basepath.Use(middlewares.AuthMiddleware)
 	config.Uc.RegisterUserRoutes(basepath)
 
 	log.Fatal(server.Run(port))
