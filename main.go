@@ -35,7 +35,7 @@ func main() {
 	server.POST("/query", middlewares.AuthMiddleware, utils.GraphqlHandler())
 
 	basepath := server.Group("/v1")
-	basepath.Use(middlewares.AuthMiddleware)
+	// basepath.Use(middlewares.AuthMiddleware)
 	config.Uc.RegisterUserRoutes(basepath)
 
 	log.Fatal(server.Run(port))
